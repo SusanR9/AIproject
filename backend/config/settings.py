@@ -71,7 +71,7 @@ DATABASES = {
         'NAME': 'railway',
         'USER': 'root',
         'PASSWORD': 'vUoEsIvGqmkzcDjCGEmlMsWzseVDPzcD',
-        'HOST': 'mysql.railway.internal',
+        'HOST': 'kodama.proxy.rlwy.net',
         'PORT': '3306',
     }
 }
