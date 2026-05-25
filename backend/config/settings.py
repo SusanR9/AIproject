@@ -5,7 +5,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-your-secret-key-here'
+    SECRET_KEY = 'django-insecure-your-secret-key-here'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -67,11 +67,11 @@ pymysql.version_info = (2, 2, 1, 'final', 0)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'competition',
+        'NAME': 'railway',
         'USER': 'root',
-        'PASSWORD': 'Sqlsus@999',
-        'HOST': 'localhost',
-        'PORT': '3307',
+        'PASSWORD': 'vUoEsIvGqmkzcDjCGEmlMsWzseVDPzcD',
+        'HOST': 'mysql.railway.internal',
+        'PORT': '3306',
     }
 }
 
