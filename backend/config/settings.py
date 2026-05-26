@@ -75,6 +75,7 @@ DATABASES = {
         'PORT': '3306',
         'OPTIONS': {
             'connect_timeout': 60,
+    },
     }
 }
 
