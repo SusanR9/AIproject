@@ -1,32 +1,38 @@
 import razorpay
 
 from django.conf import settings
-from django.http import JsonResponse
 
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from .models import Registration, Payment
-from .serializers import RegistrationSerializer
 
 
+# =====================================
 # Razorpay Client
-client = razorpay.Client(
-    auth=(
-        settings.RAZORPAY_KEY_ID,
-        settings.RAZORPAY_KEY_SECRET
+# =====================================
+
+try:
+    client = razorpay.Client(
+        auth=(
+            settings.RAZORPAY_KEY_ID,
+            settings.RAZORPAY_KEY_SECRET
+        )
     )
-)
+except Exception:
+    client = None
 
 
-# =========================
+# =====================================
 # REGISTER PARTICIPANT
-# =========================
+# =====================================
 
 @api_view(['POST'])
 def register_participant(request):
+
     try:
+
         data = request.data
         files = request.FILES
 
@@ -59,108 +65,126 @@ def register_participant(request):
         )
 
     except Exception as e:
+
         return Response(
-            {'error': str(e)},
+            {
+                'error': str(e)
+            },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-# =========================
+# =====================================
 # GET REGISTRATIONS
-# =========================
+# =====================================
 
 @api_view(['GET'])
 def get_registrations(request):
 
     try:
-        registrations = (
-            Registration.objects
-            .only(
-                'registration_id',
-                'first_name',
-                'last_name',
-                'email',
-                'competition_name',
-                'created_at'
-            )
-            .order_by('-created_at')[:100]
-        )
+
+        registrations = Registration.objects.all()[:50]
 
         data = []
 
         for reg in registrations:
+
             data.append({
                 'registration_id': reg.registration_id,
-                'name': f"{reg.first_name} {reg.last_name}",
+                'first_name': reg.first_name,
+                'last_name': reg.last_name,
                 'email': reg.email,
                 'competition_name': reg.competition_name,
-                'created_at': reg.created_at,
             })
 
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(data)
 
     except Exception as e:
+
         return Response(
-            {'error': str(e)},
+            {
+                'error': str(e)
+            },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-# =========================
-# CREATE RAZORPAY ORDER
-# =========================
+# =====================================
+# CREATE ORDER
+# =====================================
 
 @api_view(['POST'])
 def create_order(request):
 
     try:
+
+        if client is None:
+            return Response(
+                {
+                    'error': 'Razorpay not configured'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
         data = request.data
 
         amount = data.get('amount')
         registration_id = data.get('registration_id')
 
         if not amount:
+
             return Response(
-                {'error': 'Amount is required'},
+                {
+                    'error': 'Amount is required'
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         amount_in_paise = int(float(amount) * 100)
 
-        order_data = {
-            'amount': amount_in_paise,
-            'currency': 'INR',
-            'receipt': f'receipt_{registration_id}',
-            'payment_capture': 1
-        }
+        order = client.order.create(
+            data={
+                'amount': amount_in_paise,
+                'currency': 'INR',
+                'receipt': f'receipt_{registration_id}',
+                'payment_capture': 1
+            }
+        )
 
-        order = client.order.create(data=order_data)
+        return Response({
+            'order_id': order['id'],
+            'amount': order['amount'],
+            'currency': order['currency'],
+            'key_id': settings.RAZORPAY_KEY_ID
+        })
+
+    except Exception as e:
 
         return Response(
             {
-                'order_id': order['id'],
-                'amount': order['amount'],
-                'currency': order['currency'],
-                'key_id': settings.RAZORPAY_KEY_ID
+                'error': str(e)
             },
-            status=status.HTTP_200_OK
-        )
-
-    except Exception as e:
-        return Response(
-            {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
 
-# =========================
+# =====================================
 # VERIFY PAYMENT
-# =========================
+# =====================================
 
 @api_view(['POST'])
 def verify_payment(request):
 
     try:
+
+        if client is None:
+            return Response(
+                {
+                    'error': 'Razorpay not configured'
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
         data = request.data
 
         razorpay_order_id = data.get('razorpay_order_id')
@@ -190,57 +214,40 @@ def verify_payment(request):
         )
 
         return Response(
-            {'message': 'Payment verified successfully'},
-            status=status.HTTP_200_OK
+            {
+                'message': 'Payment verified successfully'
+            }
         )
 
     except razorpay.errors.SignatureVerificationError:
+
         return Response(
-            {'error': 'Invalid payment signature'},
+            {
+                'error': 'Invalid payment signature'
+            },
             status=status.HTTP_400_BAD_REQUEST
         )
-
-    except Exception as e:
-        return Response(
-            {'error': str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-# =========================
-# GET COMPETITIONS
-# =========================
-
-@api_view(['GET'])
-def get_competitions(request):
-
-    try:
-
-        competitions = (
-            Registration.objects
-            .exclude(competition_name__isnull=True)
-            .exclude(competition_name='')
-            .values_list('competition_name', flat=True)
-        )
-
-        # Remove duplicates safely using Python
-        unique_competitions = list(set(competitions))
-
-        data = []
-
-        for idx, name in enumerate(unique_competitions):
-            data.append({
-                "id": idx + 1,
-                "title": str(name)
-            })
-
-        return Response(data, status=status.HTTP_200_OK)
 
     except Exception as e:
 
         return Response(
             {
-                "error": str(e)
+                'error': str(e)
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+# =====================================
+# GET COMPETITIONS
+# =====================================
+
+@api_view(['GET'])
+def get_competitions(request):
+
+    return Response([
+        {
+            "id": 1,
+            "title": "Test Competition"
+        }
+    ])
