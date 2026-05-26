@@ -245,9 +245,33 @@ def verify_payment(request):
 @api_view(['GET'])
 def get_competitions(request):
 
-    return Response([
-        {
-            "id": 1,
-            "title": "Test Competition"
-        }
-    ])
+    try:
+
+        registrations = Registration.objects.all()[:100]
+
+        unique_names = set()
+
+        for reg in registrations:
+
+            if reg.competition_name:
+                unique_names.add(reg.competition_name)
+
+        data = []
+
+        for idx, name in enumerate(unique_names):
+
+            data.append({
+                "id": idx + 1,
+                "title": str(name)
+            })
+
+        return Response(data)
+
+    except Exception as e:
+
+        return Response(
+            {
+                "error": str(e)
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
