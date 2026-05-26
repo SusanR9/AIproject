@@ -247,23 +247,20 @@ def get_competitions(request):
 
     try:
 
-        registrations = Registration.objects.all()[:100]
-
-        unique_names = set()
-
-        for reg in registrations:
-
-            if reg.competition_name:
-                unique_names.add(reg.competition_name)
-
-        data = []
-
-        for idx, name in enumerate(unique_names):
-
-            data.append({
-                "id": idx + 1,
-                "title": str(name)
-            })
+        data = [
+            {
+                "id": 1,
+                "title": "Cooking Competition"
+            },
+            {
+                "id": 2,
+                "title": "Dance Competition"
+            },
+            {
+                "id": 3,
+                "title": "Singing Competition"
+            }
+        ]
 
         return Response(data)
 
