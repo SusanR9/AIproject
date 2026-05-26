@@ -1,6 +1,6 @@
 const API_BASE =
   import.meta.env.VITE_API_URL ||
-  'https://aiproject-hee3.onrender.com';
+  'https://aiproject-hee3.onrender.com/api';
 
 async function parseResponse(response) {
   const data = await response.json().catch(() => ({}));
@@ -11,7 +11,9 @@ async function parseResponse(response) {
         ? Object.entries(data)
           .map(
             ([key, value]) =>
-              `${key}: ${Array.isArray(value) ? value.join(', ') : value
+              `${key}: ${Array.isArray(value)
+                ? value.join(', ')
+                : value
               }`
           )
           .join('\n')
@@ -23,6 +25,7 @@ async function parseResponse(response) {
   return data;
 }
 
+// Fetch competitions
 export async function fetchCompetitions() {
   const response = await fetch(
     `${API_BASE}/registrations/competitions/`
@@ -31,6 +34,7 @@ export async function fetchCompetitions() {
   return parseResponse(response);
 }
 
+// Fetch all registrations
 export async function fetchAllRegistrations() {
   const response = await fetch(
     `${API_BASE}/registrations/`
@@ -39,6 +43,7 @@ export async function fetchAllRegistrations() {
   return parseResponse(response);
 }
 
+// Create registration
 export async function createRegistration(formData) {
   const response = await fetch(
     `${API_BASE}/register/`,
@@ -51,6 +56,7 @@ export async function createRegistration(formData) {
   return parseResponse(response);
 }
 
+// Create Razorpay order
 export async function createRazorpayOrder(
   registrationId,
   amount
@@ -72,6 +78,7 @@ export async function createRazorpayOrder(
   return parseResponse(response);
 }
 
+// Verify Razorpay payment
 export async function verifyRazorpayPayment(payload) {
   const response = await fetch(
     `${API_BASE}/payment/verify/`,
@@ -87,6 +94,7 @@ export async function verifyRazorpayPayment(payload) {
   return parseResponse(response);
 }
 
+// Load Razorpay Script
 export function loadRazorpayScript() {
   return new Promise((resolve) => {
     if (window.Razorpay) {
