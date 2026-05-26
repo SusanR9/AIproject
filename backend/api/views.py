@@ -219,18 +219,19 @@ def get_competitions(request):
         competitions = (
             Registration.objects
             .exclude(competition_name__isnull=True)
-            .exclude(competition_name__exact='')
-            .values('competition_name')
-            .order_by('competition_name')
-            .distinct()
+            .exclude(competition_name='')
+            .values_list('competition_name', flat=True)
         )
+
+        # Remove duplicates safely using Python
+        unique_competitions = list(set(competitions))
 
         data = []
 
-        for idx, item in enumerate(competitions):
+        for idx, name in enumerate(unique_competitions):
             data.append({
                 "id": idx + 1,
-                "title": item['competition_name']
+                "title": str(name)
             })
 
         return Response(data, status=status.HTTP_200_OK)
@@ -239,7 +240,7 @@ def get_competitions(request):
 
         return Response(
             {
-                'error': str(e)
+                "error": str(e)
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
