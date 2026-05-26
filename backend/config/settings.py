@@ -66,7 +66,7 @@ pymysql.__version__ = '2.2.1'
 pymysql.version_info = (2, 2, 1, 'final', 0)
 
 DATABASES = {
-    DATABASES = {
+   
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('MYSQLDATABASE'),
@@ -76,7 +76,6 @@ DATABASES = {
         'PORT': os.environ.get('MYSQLPORT'),
     }
 }
-    }
 
 
 # Password validation
