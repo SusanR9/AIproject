@@ -102,45 +102,80 @@ function Registration() {
   };
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
+
     setError('');
     setSubmitting(true);
 
     try {
+
       const payload = new FormData();
+
       payload.append('name', formData.name);
       payload.append('email', formData.email);
       payload.append('phone', formData.phone);
       payload.append('city', formData.city);
       payload.append('bloodgroup', formData.bloodgroup);
       payload.append('age', formData.age);
-      payload.append('competition_id', String(formData.competitionId));
+
+      payload.append(
+        'competition_id',
+        String(formData.competitionId)
+      );
+
       if (formData.identityProof) {
-        payload.append('identity_proof_file', formData.identityProof);
+
+        payload.append(
+          'identity_proof_file',
+          formData.identityProof
+        );
       }
+
       if (formData.candidatePhoto) {
-        payload.append('candidate_photo_file', formData.candidatePhoto);
+
+        payload.append(
+          'candidate_photo_file',
+          formData.candidatePhoto
+        );
       }
 
       const response = await createRegistration(payload);
-      // The API returns the registration object inside response.data, but wait, the view returns:
-      // { message: '...', registration_id: id, data: {...} }
-      const registration = response;
 
-      if (selectedCompetition.type === 'paid') {
-        await openRazorpayCheckout(registration, selectedCompetition);
+      console.log(response);
+
+      if (!response || !response.registration_id) {
+
+        throw new Error('Registration failed');
       }
 
-      navigate('/thankyou', {
-        state: {
-          competitionId: selectedCompetition.id,
-          registrationId: registration.registration_id,
-          paid: selectedCompetition.type === 'paid',
-        },
-      });
+      const registration = response;
+
+      // Paid Competition
+      if (selectedCompetition.type === 'paid') {
+
+        await openRazorpayCheckout(
+          registration,
+          selectedCompetition
+        );
+      }
+
+      alert('Registration Successful');
+
+      // Redirect to Home Page
+      navigate('/');
+
     } catch (err) {
-      setError(err.message || 'Registration failed. Is the API server running?');
+
+      console.error(err);
+
+      setError(
+        err.message ||
+        'Registration failed. Please try again.'
+      );
+
     } finally {
+
       setSubmitting(false);
     }
   };
