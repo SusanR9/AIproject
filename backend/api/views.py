@@ -216,26 +216,30 @@ def get_competitions(request):
 
     try:
 
-        distinct_names = (
+        competitions = (
             Registration.objects
             .exclude(competition_name__isnull=True)
             .exclude(competition_name__exact='')
-            .values_list('competition_name', flat=True)
-            .distinct()[:50]
+            .values('competition_name')
+            .order_by('competition_name')
+            .distinct()
         )
 
         data = []
 
-        for idx, name in enumerate(distinct_names):
+        for idx, item in enumerate(competitions):
             data.append({
                 "id": idx + 1,
-                "title": str(name)
+                "title": item['competition_name']
             })
 
         return Response(data, status=status.HTTP_200_OK)
 
     except Exception as e:
+
         return Response(
-            {'error': str(e)},
+            {
+                'error': str(e)
+            },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
