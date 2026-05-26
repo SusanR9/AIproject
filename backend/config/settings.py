@@ -73,6 +73,8 @@ DATABASES = {
         'PASSWORD': 'vUoEsIvGqmkzcDjCGEmlMsWzseVDPzcD',
         'HOST': 'kodama.proxy.rlwy.net',
         'PORT': '3306',
+        'OPTIONS': {
+            'connect_timeout': 60,
     }
 }
 
