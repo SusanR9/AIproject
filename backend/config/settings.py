@@ -74,7 +74,7 @@ DATABASES = {
         'HOST': 'kodama.proxy.rlwy.net',
         'PORT': '3306',
         'OPTIONS': {
-            'connect_timeout': 60,
+            'connect_timeout': 120,
     },
     }
 }
@@ -114,3 +114,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Razorpay settings
 RAZORPAY_KEY_ID = "rzp_test_SlyeZSQVRS6kuk"
 RAZORPAY_KEY_SECRET = "Qt1G3eLwSAFA8l5bHEHm69ct"
+
+print("Render deployment running")
