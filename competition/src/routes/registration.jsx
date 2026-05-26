@@ -57,9 +57,8 @@ function Registration() {
 
     const order = await createRazorpayOrder(
       registration.registration_id,
-      competition.id
+      AMOUNT_PAISE[competition.id] / 100
     );
-
     return new Promise((resolve, reject) => {
       const options = {
         key: order.key_id,
@@ -153,6 +152,8 @@ function Registration() {
 
       // Paid Competition
       if (selectedCompetition.type === 'paid') {
+
+        console.log(selectedCompetition);
 
         await openRazorpayCheckout(
           registration,
