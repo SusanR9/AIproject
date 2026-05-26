@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://aiproject-hee3.onrender.com';
 
 async function parseResponse(response) {
   const data = await response.json().catch(() => ({}));
@@ -6,8 +6,8 @@ async function parseResponse(response) {
     const message =
       typeof data === 'object' && data !== null
         ? Object.entries(data)
-            .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
-            .join('\n')
+          .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`)
+          .join('\n')
         : 'Request failed';
     throw new Error(message || `HTTP ${response.status}`);
   }

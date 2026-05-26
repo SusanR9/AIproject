@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './routes/home';
 import Registration from './routes/registration';
 import ThankYou from './routes/thankyou';
@@ -12,14 +12,19 @@ function App() {
     <Router>
       <div className="app">
         <Navbar />
+
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/registration" element={<Registration />} />
             <Route path="/thankyou" element={<ThankYou />} />
             <Route path="/admin" element={<AdminDashboard />} />
+
+            {/* fallback route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+
         <Footer />
       </div>
     </Router>
