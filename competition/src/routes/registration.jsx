@@ -162,8 +162,8 @@ function Registration() {
 
       alert('Registration Successful');
 
-      // Redirect to Home Page
-      navigate('/');
+      // Force redirect
+      window.location.href = "/";
 
     } catch (err) {
 
