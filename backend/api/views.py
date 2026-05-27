@@ -10,6 +10,16 @@ from .models import Registration, Payment
 
 
 # =========================
+# HEALTH CHECK
+# =========================
+
+def health_check(request):
+    return JsonResponse({
+        "status": "ok"
+    })
+
+
+# =========================
 # RAZORPAY CLIENT
 # =========================
 
@@ -19,14 +29,6 @@ client = razorpay.Client(
         settings.RAZORPAY_KEY_SECRET
     )
 )
-
-
-# =========================
-# HEALTH CHECK
-# =========================
-
-def health_check(request):
-    return JsonResponse({"status": "ok"})
 
 
 # =========================
@@ -64,7 +66,9 @@ def register_participant(request):
         })
 
     except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        return Response({
+            'error': str(e)
+        }, status=500)
 
 
 # =========================
@@ -90,7 +94,9 @@ def get_registrations(request):
         return Response(data)
 
     except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        return Response({
+            'error': str(e)
+        }, status=500)
 
 
 # =========================
@@ -99,11 +105,23 @@ def get_registrations(request):
 
 @api_view(['GET'])
 def get_competitions(request):
-    return Response([
-        {"id": 1, "title": "Cooking Competition"},
-        {"id": 2, "title": "Dance Competition"},
-        {"id": 3, "title": "Singing Competition"},
-    ])
+
+    competitions = [
+        {
+            "id": 1,
+            "title": "Cooking Competition"
+        },
+        {
+            "id": 2,
+            "title": "Dance Competition"
+        },
+        {
+            "id": 3,
+            "title": "Singing Competition"
+        }
+    ]
+
+    return Response(competitions)
 
 
 # =========================
@@ -119,7 +137,9 @@ def create_order(request):
         registration_id = data.get('registration_id')
 
         if not amount:
-            return Response({'error': 'Amount required'}, status=400)
+            return Response({
+                'error': 'Amount required'
+            }, status=400)
 
         amount_in_paise = int(float(amount) * 100)
 
@@ -138,7 +158,9 @@ def create_order(request):
         })
 
     except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        return Response({
+            'error': str(e)
+        }, status=500)
 
 
 # =========================
@@ -153,9 +175,11 @@ def verify_payment(request):
         razorpay_order_id = data.get('razorpay_order_id')
         razorpay_payment_id = data.get('razorpay_payment_id')
         razorpay_signature = data.get('razorpay_signature')
+
         registration_id = data.get('registration_id')
         amount = data.get('amount', 0)
 
+        # VERIFY SIGNATURE
         client.utility.verify_payment_signature({
             'razorpay_order_id': razorpay_order_id,
             'razorpay_payment_id': razorpay_payment_id,
@@ -167,7 +191,9 @@ def verify_payment(request):
         ).first()
 
         if not registration:
-            return Response({'error': 'Registration not found'}, status=404)
+            return Response({
+                'error': 'Registration not found'
+            }, status=404)
 
         payment, created = Payment.objects.get_or_create(
             registration=registration,
@@ -186,11 +212,16 @@ def verify_payment(request):
             payment.save()
 
         return Response({
-            'message': 'Payment verified successfully'
+            'message': 'Payment verified successfully',
+            'status': 'SUCCESS'
         })
 
     except razorpay.errors.SignatureVerificationError:
-        return Response({'error': 'Invalid signature'}, status=400)
+        return Response({
+            'error': 'Invalid signature'
+        }, status=400)
 
     except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        return Response({
+            'error': str(e)
+        }, status=500)
