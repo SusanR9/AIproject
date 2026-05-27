@@ -35,13 +35,11 @@ def health_check(request):
 
 @api_view(['POST'])
 def register_participant(request):
-
     try:
         data = request.data
         files = request.FILES
 
         full_name = data.get('name', '').strip()
-
         name_parts = full_name.split(' ', 1)
 
         first_name = name_parts[0] if len(name_parts) > 0 else ''
@@ -63,7 +61,7 @@ def register_participant(request):
         return Response({
             'message': 'Registration successful',
             'registration_id': registration.registration_id
-        }, status=201)
+        })
 
     except Exception as e:
         return Response({'error': str(e)}, status=500)
@@ -75,7 +73,6 @@ def register_participant(request):
 
 @api_view(['GET'])
 def get_registrations(request):
-
     try:
         registrations = Registration.objects.all()[:50]
 
@@ -102,7 +99,6 @@ def get_registrations(request):
 
 @api_view(['GET'])
 def get_competitions(request):
-
     return Response([
         {"id": 1, "title": "Cooking Competition"},
         {"id": 2, "title": "Dance Competition"},
@@ -116,7 +112,6 @@ def get_competitions(request):
 
 @api_view(['POST'])
 def create_order(request):
-
     try:
         data = request.data
 
@@ -152,16 +147,13 @@ def create_order(request):
 
 @api_view(['POST'])
 def verify_payment(request):
-
     try:
         data = request.data
 
         razorpay_order_id = data.get('razorpay_order_id')
         razorpay_payment_id = data.get('razorpay_payment_id')
         razorpay_signature = data.get('razorpay_signature')
-
         registration_id = data.get('registration_id')
-
         amount = data.get('amount', 0)
 
         client.utility.verify_payment_signature({
@@ -175,10 +167,7 @@ def verify_payment(request):
         ).first()
 
         if not registration:
-            return Response(
-                {'error': 'Registration not found'},
-                status=404
-            )
+            return Response({'error': 'Registration not found'}, status=404)
 
         payment, created = Payment.objects.get_or_create(
             registration=registration,
@@ -197,8 +186,7 @@ def verify_payment(request):
             payment.save()
 
         return Response({
-            'message': 'Payment verified successfully',
-            'status': payment.payment_status
+            'message': 'Payment verified successfully'
         })
 
     except razorpay.errors.SignatureVerificationError:
