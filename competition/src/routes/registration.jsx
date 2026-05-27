@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { competitions } from '../data/competitions';
+
 import {
   createRegistration,
   createRazorpayOrder,
@@ -127,52 +128,84 @@ function Registration() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
+    setError("");
 
     try {
+      // =========================
+      // STEP 1: REGISTER USER
+      // =========================
       const fd = new FormData();
 
-      // text fields
-      fd.append('name', formData.name);
-      fd.append('email', formData.email);
-      fd.append('phone', formData.phone);
-      fd.append('city', formData.city);
-      fd.append('bloodgroup', formData.bloodgroup);
-      fd.append('age', formData.age);
-      fd.append('competition_id', formData.competitionId);
+      fd.append("name", formData.name);
+      fd.append("email", formData.email);
+      fd.append("phone", formData.phone);
+      fd.append("city", formData.city);
+      fd.append("bloodgroup", formData.bloodgroup);
+      fd.append("age", formData.age);
+      fd.append("competition_id", formData.competitionId);
 
-      // files
-      fd.append('identity_proof_file', formData.identityProof);
-      fd.append('candidate_photo_file', formData.candidatePhoto);
+      fd.append("identity_proof_file", formData.identityProof);
+      fd.append("candidate_photo_file", formData.candidatePhoto);
 
-      // 1. REGISTER
-      const res = await createRegistration(fd);
+      const reg = await createRegistration(fd);
 
-      console.log('Registration Response:', res);
+      console.log("REGISTERED:", reg);
 
-      if (!res.registration_id) {
-        throw new Error('No registration_id received');
+      if (!reg.registration_id) {
+        throw new Error("Registration failed");
       }
 
-      // 2. PAYMENT
-      await openRazorpayCheckout(res, selectedCompetition);
+      // =========================
+      // STEP 2: CREATE ORDER
+      // =========================
+      const order = await createRazorpayOrder(
+        reg.registration_id,
+        AMOUNT_PAISE[formData.competitionId] / 100
+      );
 
-      // 3. SUCCESS PAGE
-      navigate('/success', {
-        state: {
-          registrationId: res.registration_id,
+      // =========================
+      // STEP 3: OPEN RAZORPAY
+      // =========================
+      await loadRazorpayScript();
+
+      const options = {
+        key: order.key_id,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.order_id,
+        name: "Competition App",
+
+        handler: async function (response) {
+          // =========================
+          // STEP 4: VERIFY PAYMENT
+          // =========================
+          await verifyRazorpayPayment({
+            registration_id: reg.registration_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            amount: order.amount / 100,
+          });
+
+          // =========================
+          // STEP 5: SUCCESS PAGE
+          // =========================
+          navigate("/success", {
+            state: { registrationId: reg.registration_id },
+          });
         },
-      });
+      };
 
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
-      console.error('ERROR:', err);
+      console.error(err);
       setError(err.message);
       alert(err.message);
     }
 
     setSubmitting(false);
   };
-
   return (
     <div className="registration-wrapper">
 
