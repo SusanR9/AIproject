@@ -78,17 +78,39 @@ def register_participant(request):
 @api_view(['GET'])
 def get_registrations(request):
     try:
-        registrations = Registration.objects.all()[:50]
+
+        registrations = Registration.objects.all().order_by('-registration_id')
+
+        competitions_map = {
+            "1": "Cooking Competition",
+            "2": "Dance Competition",
+            "3": "Singing Competition",
+            "4": "Art Competition",
+            "5": "Photography Competition",
+            "6": "Coding Competition",
+            "7": "Quiz Competition",
+            "8": "Gaming Competition",
+            "9": "Fashion Competition",
+        }
 
         data = []
 
         for reg in registrations:
+
+            competition_title = competitions_map.get(
+                str(reg.competition_name),
+                reg.competition_name
+            )
+
             data.append({
                 'registration_id': reg.registration_id,
                 'first_name': reg.first_name,
                 'last_name': reg.last_name,
                 'email': reg.email,
-                'competition_name': reg.competition_name,
+                'phno': reg.phno,
+                'address': reg.address,
+                'competition_name': competition_title,
+                'created_at': reg.created_at.isoformat() if reg.created_at else None,
             })
 
         return Response(data)
@@ -97,7 +119,6 @@ def get_registrations(request):
         return Response({
             'error': str(e)
         }, status=500)
-
 
 # =========================
 # GET COMPETITIONS
