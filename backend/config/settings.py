@@ -1,9 +1,11 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import pymysql
-
 pymysql.install_as_MySQLdb()
-
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -94,18 +96,13 @@ DATABASES = {
 
         'HOST': os.environ.get('DB_HOST'),
 
-        'PORT': int(os.environ.get('DB_PORT', 3306)),
+        'PORT': int(os.environ.get('DB_PORT')),
 
         'OPTIONS': {
             'charset': 'utf8mb4',
-            'connect_timeout': 10,
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-
-        'CONN_MAX_AGE': 0,
+        }
     }
 }
-
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {

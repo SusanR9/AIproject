@@ -26,12 +26,52 @@ export const loadRazorpayScript = () => {
 
 
 // =========================
+// FETCH COMPETITIONS
+// =========================
+export const fetchCompetitions = async () => {
+  const response = await fetch(
+    `${API_BASE}/competitions/`
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error || "Failed to fetch competitions"
+    );
+  }
+
+  return data;
+};
+
+
+// =========================
+// FETCH ALL REGISTRATIONS
+// =========================
+export const fetchAllRegistrations = async () => {
+  const response = await fetch(
+    `${API_BASE}/registrations/`
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error || "Failed to fetch registrations"
+    );
+  }
+
+  return data;
+};
+
+
+// =========================
 // CREATE REGISTRATION
 // =========================
 export const createRegistration = async (formData) => {
 
   const response = await fetch(
-    `${API_BASE}/registrations/`,
+    `${API_BASE}/register/`,
     {
       method: "POST",
       body: formData,
@@ -41,17 +81,12 @@ export const createRegistration = async (formData) => {
   let data;
 
   try {
-
     data = await response.json();
-
   } catch (err) {
-
     throw new Error("Invalid server response");
-
   }
 
   if (!response.ok) {
-
     throw new Error(
       data?.error ||
       data?.message ||
@@ -72,9 +107,10 @@ export const createRazorpayOrder = async (
 ) => {
 
   const response = await fetch(
-    `${API_BASE}/create-order/`,
+    `${API_BASE}/payment/create-order/`,
     {
       method: "POST",
+
       headers: {
         "Content-Type": "application/json",
       },
@@ -89,7 +125,6 @@ export const createRazorpayOrder = async (
   const data = await response.json();
 
   if (!response.ok) {
-
     throw new Error(
       data?.error ||
       "Failed to create Razorpay order"
@@ -108,7 +143,7 @@ export const verifyRazorpayPayment = async (
 ) => {
 
   const response = await fetch(
-    `${API_BASE}/verify-payment/`,
+    `${API_BASE}/payment/verify/`,
     {
       method: "POST",
 
@@ -123,7 +158,6 @@ export const verifyRazorpayPayment = async (
   const data = await response.json();
 
   if (!response.ok) {
-
     throw new Error(
       data?.error ||
       "Payment verification failed"
