@@ -49,8 +49,15 @@ MIDDLEWARE = [
 ]
 
 # CORS
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
 
+CORS_ALLOWED_ORIGINS = [
+    "https://competitionai.netlify.app",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://competitionai.netlify.app",
+]
 # URLs
 ROOT_URLCONF = 'config.urls'
 
@@ -78,12 +85,24 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
+
         'NAME': os.environ.get('DB_NAME'),
+
         'USER': os.environ.get('DB_USER'),
+
         'PASSWORD': os.environ.get('DB_PASSWORD'),
+
         'HOST': os.environ.get('DB_HOST'),
-        'PORT': os.environ.get('DB_PORT'),
-        'CONN_MAX_AGE': 60,
+
+        'PORT': int(os.environ.get('DB_PORT', 3306)),
+
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'connect_timeout': 10,
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
+
+        'CONN_MAX_AGE': 0,
     }
 }
 
