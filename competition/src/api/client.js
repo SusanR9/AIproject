@@ -1,20 +1,35 @@
 const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  'https://aiproject-hee3.onrender.com/api';
+  (import.meta.env.VITE_API_URL ||
+    'https://aiproject-hee3.onrender.com/api'
+  ).replace(/\/$/, '');
 
+// -------------------- Fetch with timeout --------------------
+function fetchWithTimeout(url, options, timeout = 15000) {
+  return Promise.race([
+    fetch(url, options),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timeout')), timeout)
+    ),
+  ]);
+}
+
+// -------------------- Response Parser --------------------
 async function parseResponse(response) {
-  const data = await response.json().catch(() => ({}));
+  let data = {};
+
+  try {
+    data = await response.json();
+  } catch (e) {
+    const text = await response.text().catch(() => '');
+    throw new Error(text || 'Invalid JSON response from server');
+  }
 
   if (!response.ok) {
     const message =
       typeof data === 'object' && data !== null
         ? Object.entries(data)
-          .map(
-            ([key, value]) =>
-              `${key}: ${Array.isArray(value)
-                ? value.join(', ')
-                : value
-              }`
+          .map(([key, value]) =>
+            `${key}: ${Array.isArray(value) ? value.join(', ') : value}`
           )
           .join('\n')
         : 'Request failed';
@@ -25,27 +40,23 @@ async function parseResponse(response) {
   return data;
 }
 
-// Fetch competitions
+// -------------------- API CALLS --------------------
 export async function fetchCompetitions() {
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${API_BASE}/registrations/competitions/`
   );
-
   return parseResponse(response);
 }
 
-// Fetch all registrations
 export async function fetchAllRegistrations() {
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${API_BASE}/registrations/`
   );
-
   return parseResponse(response);
 }
 
-// Create registration
 export async function createRegistration(formData) {
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${API_BASE}/register/`,
     {
       method: 'POST',
@@ -56,12 +67,8 @@ export async function createRegistration(formData) {
   return parseResponse(response);
 }
 
-// Create Razorpay order
-export async function createRazorpayOrder(
-  registrationId,
-  amount
-) {
-  const response = await fetch(
+export async function createRazorpayOrder(registrationId, amount) {
+  const response = await fetchWithTimeout(
     `${API_BASE}/payment/create-order/`,
     {
       method: 'POST',
@@ -70,7 +77,7 @@ export async function createRazorpayOrder(
       },
       body: JSON.stringify({
         registration_id: registrationId,
-        amount: amount,
+        amount,
       }),
     }
   );
@@ -78,9 +85,8 @@ export async function createRazorpayOrder(
   return parseResponse(response);
 }
 
-// Verify Razorpay payment
 export async function verifyRazorpayPayment(payload) {
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `${API_BASE}/payment/verify/`,
     {
       method: 'POST',
@@ -94,21 +100,17 @@ export async function verifyRazorpayPayment(payload) {
   return parseResponse(response);
 }
 
-// Load Razorpay Script
 export function loadRazorpayScript() {
   return new Promise((resolve) => {
-    if (window.Razorpay) {
+    if (typeof window !== 'undefined' && window.Razorpay) {
       resolve(true);
       return;
     }
 
     const script = document.createElement('script');
-
-    script.src =
-      'https://checkout.razorpay.com/v1/checkout.js';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
 
     script.onload = () => resolve(true);
-
     script.onerror = () => resolve(false);
 
     document.body.appendChild(script);

@@ -29,51 +29,69 @@ except Exception:
 # =====================================
 
 @api_view(['POST'])
-def register_participant(request):
+def verify_payment(request):
 
     try:
-
         data = request.data
-        files = request.FILES
 
-        full_name = data.get('name', '').strip()
+        razorpay_order_id = data.get('razorpay_order_id')
+        razorpay_payment_id = data.get('razorpay_payment_id')
+        razorpay_signature = data.get('razorpay_signature')
+        registration_id = data.get('registration_id')
+        amount = data.get('amount', 0)
 
-        name_parts = full_name.split(' ', 1)
+        # 1. VERIFY SIGNATURE
+        client.utility.verify_payment_signature({
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_signature': razorpay_signature
+        })
 
-        first_name = name_parts[0] if len(name_parts) > 0 else ''
-        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        # 2. GET REGISTRATION
+        registration = Registration.objects.filter(
+            registration_id=registration_id
+        ).first()
 
-        registration = Registration.objects.create(
-            first_name=first_name,
-            last_name=last_name,
-            age=data.get('age'),
-            phno=data.get('phone', ''),
-            address=data.get('city', ''),
-            email=data.get('email', ''),
-            bloodgroup=data.get('bloodgroup', ''),
-            competition_name=data.get('competition_id', ''),
-            identity_proof=files.get('identity_proof_file'),
-            candidate_photo=files.get('candidate_photo_file'),
+        if not registration:
+            return Response(
+                {'error': 'Registration not found'},
+                status=404
+            )
+
+        # 3. CREATE / UPDATE PAYMENT
+        payment, created = Payment.objects.get_or_create(
+            registration=registration,
+            defaults={
+                'mode_of_payment': 'Razorpay',
+                'payment_status': 'SUCCESS',
+                'transaction_id': razorpay_payment_id,
+                'amount': amount
+            }
         )
 
+        if not created:
+            payment.payment_status = "SUCCESS"
+            payment.transaction_id = razorpay_payment_id
+            payment.amount = amount
+            payment.save()
+
+        return Response({
+            'message': 'Payment verified and saved successfully',
+            'payment_status': payment.payment_status,
+            'transaction_id': payment.transaction_id
+        })
+
+    except razorpay.errors.SignatureVerificationError:
         return Response(
-            {
-                'message': 'Registration successful',
-                'registration_id': registration.registration_id,
-            },
-            status=status.HTTP_201_CREATED
+            {'error': 'Invalid payment signature'},
+            status=400
         )
 
     except Exception as e:
-
         return Response(
-            {
-                'error': str(e)
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            {'error': str(e)},
+            status=500
         )
-
-
 # =====================================
 # GET REGISTRATIONS
 # =====================================

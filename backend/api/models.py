@@ -21,13 +21,12 @@ class Registration(models.Model):
 
 
 class Payment(models.Model):
-    payment_id = models.AutoField(db_column='PaymentId', primary_key=True)
-    registration = models.ForeignKey(Registration, models.DO_NOTHING, db_column='Registration_id', null=True, blank=True)
-    mode_of_payment = models.CharField(db_column='Mode_of_payment', max_length=100, null=True, blank=True)
-    payment_status = models.CharField(db_column='Payment_status', max_length=10, null=True, blank=True)
-    created_at = models.DateTimeField(db_column='Created_at', auto_now_add=True)
-    transaction_id = models.CharField(db_column='Transaction_Id', max_length=50, null=True, blank=True)
-    amount = models.FloatField(db_column='AMOUNT', null=True, blank=True)
+    registration = models.ForeignKey(Registration, on_delete=models.CASCADE)
+    mode_of_payment = models.CharField(max_length=50, default="Razorpay")
+    payment_status = models.CharField(max_length=20, default="PENDING")
+    transaction_id = models.CharField(max_length=100, null=True, blank=True)
+    amount = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         managed = False
