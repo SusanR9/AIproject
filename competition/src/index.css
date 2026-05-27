@@ -18,7 +18,7 @@ body {
   margin: 0;
   font-family: 'Outfit', sans-serif;
   background: var(--bg-primary);
-  background-image: 
+  background-image:
     radial-gradient(circle at 0% 0%, rgba(244, 114, 182, 0.15) 0%, transparent 50%),
     radial-gradient(circle at 100% 100%, rgba(192, 132, 252, 0.1) 0%, transparent 50%);
   color: var(--text-primary);
@@ -196,16 +196,118 @@ body {
 
 /* Animations */
 @keyframes fadeDown {
-  from { opacity: 0; transform: translateY(-30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* =========================
+   MOBILE RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+
+  .hero-content,
+  .registration-container,
+  .admin-dashboard,
+  .admin-table-wrapper {
+    padding: 16px !important;
+  }
+
+  .hero-title,
+  .form-title,
+  .admin-dashboard-title {
+    font-size: 2rem !important;
+    line-height: 1.2;
+  }
+
+  .hero-subtitle,
+  .form-subtitle {
+    font-size: 1rem !important;
+  }
+
+  .navbar {
+    padding: 12px 16px !important;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .nav-links {
+    gap: 12px !important;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .registration-form-container {
+    width: 100% !important;
+    padding: 20px !important;
+  }
+
+  .registration-form {
+    gap: 16px !important;
+  }
+
+  .admin-dashboard-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 16px;
+  }
+
+  .admin-filter-bar {
+    flex-direction: column !important;
+  }
+
+  .admin-filter-input {
+    width: 100% !important;
+  }
+
+  .admin-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .admin-table {
+    min-width: 900px;
+  }
+
+  .competition-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .competition-card {
+    width: 100%;
+  }
+
+  button,
+  .submit-btn,
+  .admin-login-btn {
+    width: 100%;
+  }
 }
