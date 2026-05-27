@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { competitions } from '../data/competitions';
+
 import {
   createRegistration,
   createRazorpayOrder,
@@ -16,11 +17,15 @@ const AMOUNT_PAISE = {
 };
 
 function Registration() {
-  const navigate = useNavigate();
+
   const location = useLocation();
+
   const preSelectedId = location.state?.competitionId;
+
   const [submitting, setSubmitting] = useState(false);
+
   const [error, setError] = useState('');
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -42,61 +47,123 @@ function Registration() {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.files[0] });
+
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.files[0],
+    });
   };
 
-  const openRazorpayCheckout = async (registration, competition) => {
+  const openRazorpayCheckout = async (
+    registration,
+    competition
+  ) => {
+
     const loaded = await loadRazorpayScript();
+
     if (!loaded || !window.Razorpay) {
-      throw new Error('Razorpay failed to load. Check your internet connection.');
+
+      throw new Error(
+        'Razorpay SDK failed to load'
+      );
     }
 
     const order = await createRazorpayOrder(
       registration.registration_id,
       AMOUNT_PAISE[competition.id] / 100
     );
+
     return new Promise((resolve, reject) => {
+
       const options = {
+
         key: order.key_id,
+
         amount: order.amount,
+
         currency: order.currency,
+
         name: 'Competition Hub',
+
         description: competition.title,
+
         order_id: order.order_id,
+
         prefill: {
           name: formData.name,
           email: formData.email,
           contact: formData.phone,
         },
-        theme: { color: '#7c3aed' },
-        handler: async (response) => {
+
+        theme: {
+          color: '#7c3aed',
+        },
+
+        handler: async function (response) {
+
           try {
+
             await verifyRazorpayPayment({
-              registration_id: registration.registration_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              amount: order.amount / 100
+
+              registration_id:
+                registration.registration_id,
+
+              razorpay_order_id:
+                response.razorpay_order_id,
+
+              razorpay_payment_id:
+                response.razorpay_payment_id,
+
+              razorpay_signature:
+                response.razorpay_signature,
+
+              amount: order.amount / 100,
             });
+
             resolve(response);
+
           } catch (err) {
+
             reject(err);
           }
         },
+
         modal: {
-          ondismiss: () => reject(new Error('Payment cancelled.')),
+
+          ondismiss: function () {
+
+            reject(
+              new Error('Payment cancelled')
+            );
+          },
         },
       };
 
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', (resp) => {
-        reject(new Error(resp.error?.description || 'Payment failed.'));
-      });
-      rzp.open();
+      const razorpayObject =
+        new window.Razorpay(options);
+
+      razorpayObject.on(
+        'payment.failed',
+        function (response) {
+
+          reject(
+            new Error(
+              response.error?.description ||
+              'Payment failed'
+            )
+          );
+        }
+      );
+
+      razorpayObject.open();
     });
   };
 
@@ -104,18 +171,27 @@ function Registration() {
 
     e.preventDefault();
 
-    setError('');
     setSubmitting(true);
+
+    setError('');
 
     try {
 
       const payload = new FormData();
 
       payload.append('name', formData.name);
+
       payload.append('email', formData.email);
+
       payload.append('phone', formData.phone);
+
       payload.append('city', formData.city);
-      payload.append('bloodgroup', formData.bloodgroup);
+
+      payload.append(
+        'bloodgroup',
+        formData.bloodgroup
+      );
+
       payload.append('age', formData.age);
 
       payload.append(
@@ -139,21 +215,32 @@ function Registration() {
         );
       }
 
-      const response = await createRegistration(payload);
+      console.log('Submitting registration...');
 
-      console.log(response);
+      const registration =
+        await createRegistration(payload);
 
-      if (!response || !response.registration_id) {
+      console.log(
+        'Registration response:',
+        registration
+      );
 
-        throw new Error('Registration failed');
+      if (
+        !registration ||
+        !registration.registration_id
+      ) {
+
+        throw new Error(
+          registration?.error ||
+          'Registration failed'
+        );
       }
 
-      const registration = response;
-
-      // Paid Competition
-      if (selectedCompetition.type === 'paid') {
-
-        console.log(selectedCompetition);
+      // Paid competitions
+      if (
+        selectedCompetition &&
+        selectedCompetition.type === 'paid'
+      ) {
 
         await openRazorpayCheckout(
           registration,
@@ -163,8 +250,7 @@ function Registration() {
 
       alert('Registration Successful');
 
-      // Force redirect
-      window.location.href = "/";
+      window.location.href = '/';
 
     } catch (err) {
 
@@ -183,59 +269,87 @@ function Registration() {
 
   const feeLabel =
     selectedCompetition?.type === 'paid'
-      ? `Pay ₹${(AMOUNT_PAISE[selectedCompetition.id] || 0) / 100} via Razorpay`
+      ? `Pay ₹${(AMOUNT_PAISE[selectedCompetition.id] || 0) / 100
+      }`
       : 'Complete Registration';
 
   return (
     <div className="registration-container">
+
       <div className="registration-form-container">
-        <h1 className="form-title">Join the Competition</h1>
+
+        <h1 className="form-title">
+          Join the Competition
+        </h1>
+
         <p className="form-subtitle">
-          Register with MySQL backend. Paid events use secure Razorpay checkout.
+          Register with secure Razorpay payment integration
         </p>
 
         {error && (
-          <p className="form-error" role="alert">
+          <p
+            className="form-error"
+            style={{
+              color: 'red',
+              marginBottom: '15px',
+            }}
+          >
             {error}
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="registration-form">
+        <form
+          onSubmit={handleSubmit}
+          className="registration-form"
+        >
+
           <div className="form-group">
-            <label htmlFor="competitionId">Select Competition</label>
+
+            <label>Select Competition</label>
+
             <select
-              id="competitionId"
               name="competitionId"
               value={formData.competitionId}
               onChange={handleChange}
               required
             >
+
               {competitions.map((comp) => (
-                <option key={comp.id} value={comp.id}>
-                  {comp.title} ({comp.type === 'free' ? 'Free' : `Paid - ${comp.price}`})
+
+                <option
+                  key={comp.id}
+                  value={comp.id}
+                >
+
+                  {comp.title} (
+                  {comp.type === 'free'
+                    ? 'Free'
+                    : `Paid - ${comp.price}`})
+
                 </option>
               ))}
             </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="name">Full Name</label>
+
+            <label>Full Name</label>
+
             <input
               type="text"
-              id="name"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="First and last name"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+
+            <label>Email</label>
+
             <input
               type="email"
-              id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
@@ -244,23 +358,24 @@ function Registration() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="phone">Phone Number</label>
+
+            <label>Phone</label>
+
             <input
               type="tel"
-              id="phone"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              maxLength={12}
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="city">City / Address</label>
+
+            <label>City</label>
+
             <input
               type="text"
-              id="city"
               name="city"
               value={formData.city}
               onChange={handleChange}
@@ -269,37 +384,37 @@ function Registration() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="bloodgroup">Blood Group</label>
+
+            <label>Blood Group</label>
+
             <input
               type="text"
-              id="bloodgroup"
               name="bloodgroup"
               value={formData.bloodgroup}
               onChange={handleChange}
-              placeholder="e.g. O+, B+"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="age">Age</label>
+
+            <label>Age</label>
+
             <input
               type="number"
-              id="age"
               name="age"
               value={formData.age}
               onChange={handleChange}
-              min={1}
-              max={120}
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="identityProof">Identity Proof (Image)</label>
+
+            <label>Identity Proof</label>
+
             <input
               type="file"
-              id="identityProof"
               name="identityProof"
               accept="image/*"
               onChange={handleFileChange}
@@ -308,10 +423,11 @@ function Registration() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="candidatePhoto">Candidate Photo</label>
+
+            <label>Candidate Photo</label>
+
             <input
               type="file"
-              id="candidatePhoto"
               name="candidatePhoto"
               accept="image/*"
               onChange={handleFileChange}
@@ -320,13 +436,25 @@ function Registration() {
           </div>
 
           {selectedCompetition?.type === 'paid' && (
+
             <p className="razorpay-note">
-              You will pay securely with Razorpay (test mode) after submitting this form.
+
+              Secure Razorpay payment will open
+              after registration.
+
             </p>
           )}
 
-          <button type="submit" className="submit-btn" disabled={submitting}>
-            {submitting ? 'Please wait...' : feeLabel}
+          <button
+            type="submit"
+            className="submit-btn"
+            disabled={submitting}
+          >
+
+            {submitting
+              ? 'Please wait...'
+              : feeLabel}
+
           </button>
         </form>
       </div>
