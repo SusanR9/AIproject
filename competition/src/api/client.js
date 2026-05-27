@@ -29,6 +29,7 @@ export const loadRazorpayScript = () => {
 // FETCH COMPETITIONS
 // =========================
 export const fetchCompetitions = async () => {
+
   const response = await fetch(
     `${API_BASE}/competitions/`
   );
@@ -43,7 +44,6 @@ export const fetchCompetitions = async () => {
 
   return data;
 };
-
 
 // =========================
 // FETCH ALL REGISTRATIONS
