@@ -2,28 +2,28 @@ import { Link } from "react-router-dom";
 
 function Navbar() {
   return (
-    <nav className="navbar">
+    <header className="navbar">
 
-      <div className="logo-container">
+      <div className="navbar-left">
 
         <img
           src="/logo.png"
-          alt="Competition Hub Logo"
-          className="logo-image"
+          alt="Competition Hub"
+          className="navbar-logo"
         />
 
-        <h2 className="logo-text">
+        <h1 className="navbar-title">
           Competition Hub
-        </h2>
+        </h1>
 
       </div>
 
-      <div className="nav-links">
+      <nav className="navbar-right">
         <Link to="/">Home</Link>
         <Link to="/registration">Register</Link>
-      </div>
+      </nav>
 
-    </nav>
+    </header>
   );
 }
 
