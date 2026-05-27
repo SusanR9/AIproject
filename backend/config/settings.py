@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
-
+import pymysql
+pymysql.install_as_MySQLdb()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -66,19 +67,24 @@ pymysql.install_as_MySQLdb()
 pymysql.__version__ = '2.2.1'
 pymysql.version_info = (2, 2, 1, 'final', 0)
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'railway',
         'USER': 'root',
-        'PASSWORD': 'vUoEsIvGqmkzcDjCGEmlMsWzseVDPzcD',
+        'PASSWORD': os.environ.get("vUoEsIvGqmkzcDjCGEmlMsWzseVDPzcD"),
         'HOST': 'kodama.proxy.rlwy.net',
         'PORT': '41539',
         'OPTIONS': {
-            'connect_timeout': 60,
+            'charset': 'utf8mb4',
+            'connect_timeout': 300,
+            'init_command': "SET SESSION wait_timeout=28800",
         },
+        'CONN_MAX_AGE': 60,
     }
 }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

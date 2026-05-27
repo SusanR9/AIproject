@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { competitions } from '../data/competitions';
-
 import {
   createRegistration,
   createRazorpayOrder,
@@ -19,12 +18,9 @@ const AMOUNT_PAISE = {
 function Registration() {
   const navigate = useNavigate();
   const location = useLocation();
-
   const preSelectedId = location.state?.competitionId;
-
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -46,34 +42,23 @@ function Registration() {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleFileChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.files[0],
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.files[0] });
   };
 
-  // -----------------------------
-  // RAZORPAY CHECKOUT
-  // -----------------------------
   const openRazorpayCheckout = async (registration, competition) => {
     const loaded = await loadRazorpayScript();
-
     if (!loaded || !window.Razorpay) {
-      throw new Error('Razorpay failed to load');
+      throw new Error('Razorpay failed to load. Check your internet connection.');
     }
 
     const order = await createRazorpayOrder(
       registration.registration_id,
       AMOUNT_PAISE[competition.id] / 100
     );
-
     return new Promise((resolve, reject) => {
       const options = {
         key: order.key_id,
@@ -82,15 +67,12 @@ function Registration() {
         name: 'Competition Hub',
         description: competition.title,
         order_id: order.order_id,
-
         prefill: {
           name: formData.name,
           email: formData.email,
           contact: formData.phone,
         },
-
         theme: { color: '#7c3aed' },
-
         handler: async (response) => {
           try {
             await verifyRazorpayPayment({
@@ -98,44 +80,35 @@ function Registration() {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              amount: order.amount / 100,
+              amount: order.amount / 100
             });
-
             resolve(response);
           } catch (err) {
             reject(err);
           }
         },
-
         modal: {
-          ondismiss: () => reject(new Error('Payment cancelled')),
+          ondismiss: () => reject(new Error('Payment cancelled.')),
         },
       };
 
       const rzp = new window.Razorpay(options);
-
       rzp.on('payment.failed', (resp) => {
-        reject(new Error(resp.error?.description || 'Payment failed'));
+        reject(new Error(resp.error?.description || 'Payment failed.'));
       });
-
       rzp.open();
     });
   };
 
-  // -----------------------------
-  // SUBMIT HANDLER (FIXED FLOW)
-  // -----------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError("");
 
     try {
-      // =========================
-      // STEP 1: REGISTER USER
-      // =========================
       const fd = new FormData();
 
+      // normal fields
       fd.append("name", formData.name);
       fd.append("email", formData.email);
       fd.append("phone", formData.phone);
@@ -144,108 +117,167 @@ function Registration() {
       fd.append("age", formData.age);
       fd.append("competition_id", formData.competitionId);
 
+      // file fields (VERY IMPORTANT)
       fd.append("identity_proof_file", formData.identityProof);
       fd.append("candidate_photo_file", formData.candidatePhoto);
 
-      const reg = await createRegistration(fd);
+      const res = await createRegistration(fd);
 
-      console.log("REGISTERED:", reg);
+      console.log("Registration Response:", res);
 
-      if (!reg.registration_id) {
-        throw new Error("Registration failed");
+      if (!res.registration_id) {
+        throw new Error("No registration_id received");
       }
 
-      // =========================
-      // STEP 2: CREATE ORDER
-      // =========================
-      const order = await createRazorpayOrder(
-        reg.registration_id,
-        AMOUNT_PAISE[formData.competitionId] / 100
-      );
+      // OPTIONAL BUT CORRECT FLOW:
+      await openRazorpayCheckout(res, selectedCompetition);
 
-      // =========================
-      // STEP 3: OPEN RAZORPAY
-      // =========================
-      await loadRazorpayScript();
-
-      const options = {
-        key: order.key_id,
-        amount: order.amount,
-        currency: order.currency,
-        order_id: order.order_id,
-        name: "Competition App",
-
-        handler: async function (response) {
-          // =========================
-          // STEP 4: VERIFY PAYMENT
-          // =========================
-          await verifyRazorpayPayment({
-            registration_id: reg.registration_id,
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_signature: response.razorpay_signature,
-            amount: order.amount / 100,
-          });
-
-          // =========================
-          // STEP 5: SUCCESS PAGE
-          // =========================
-          navigate("/success", {
-            state: { registrationId: reg.registration_id },
-          });
+      navigate("/success", {
+        state: {
+          registrationId: res.registration_id,
         },
-      };
+      });
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
     } catch (err) {
-      console.error(err);
+      console.error("ERROR:", err);
       setError(err.message);
       alert(err.message);
     }
 
     setSubmitting(false);
   };
-  return (
-    <div className="registration-wrapper">
 
-      <form onSubmit={handleSubmit} className="registration-form">
-
-        <div className="form-group">
-          <label>Select Competition</label>
-          <select
-            name="competitionId"
-            value={formData.competitionId}
-            onChange={handleChange}
-            required
-          >
-            {competitions.map((comp) => (
-              <option key={comp.id} value={comp.id}>
-                {comp.title}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <input name="name" placeholder="Full Name" onChange={handleChange} required />
-        <input name="email" placeholder="Email" onChange={handleChange} required />
-        <input name="phone" placeholder="Phone" onChange={handleChange} required />
-        <input name="city" placeholder="City" onChange={handleChange} required />
-        <input name="bloodgroup" placeholder="Blood Group" onChange={handleChange} required />
-        <input type="number" name="age" placeholder="Age" onChange={handleChange} required />
-
-        <input type="file" name="identityProof" onChange={handleFileChange} required />
-        <input type="file" name="candidatePhoto" onChange={handleFileChange} required />
-
-        <button type="submit" disabled={submitting}>
-          {submitting ? 'Processing...' : 'Register & Pay'}
-        </button>
-
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      </form>
-
+  <form onSubmit={handleSubmit} className="registration-form">
+    <div className="form-group">
+      <label htmlFor="competitionId">Select Competition</label>
+      <select
+        id="competitionId"
+        name="competitionId"
+        value={formData.competitionId}
+        onChange={handleChange}
+        required
+      >
+        {competitions.map((comp) => (
+          <option key={comp.id} value={comp.id}>
+            {comp.title} ({comp.type === 'free' ? 'Free' : `Paid - ${comp.price}`})
+          </option>
+        ))}
+      </select>
     </div>
+
+    <div className="form-group">
+      <label htmlFor="name">Full Name</label>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        placeholder="First and last name"
+        required
+      />
+    </div>
+
+    <div className="form-group">
+      <label htmlFor="email">Email Address</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        value={formData.email}
+        onChange={handleChange}
+        required
+      />
+    </div>
+
+    <div className="form-group">
+      <label htmlFor="phone">Phone Number</label>
+      <input
+        type="tel"
+        id="phone"
+        name="phone"
+        value={formData.phone}
+        onChange={handleChange}
+        maxLength={12}
+        required
+      />
+    </div>
+
+    <div className="form-group">
+      <label htmlFor="city">City / Address</label>
+      <input
+        type="text"
+        id="city"
+        name="city"
+        value={formData.city}
+        onChange={handleChange}
+        required
+      />
+    </div>
+
+    <div className="form-group">
+      <label htmlFor="bloodgroup">Blood Group</label>
+      <input
+        type="text"
+        id="bloodgroup"
+        name="bloodgroup"
+        value={formData.bloodgroup}
+        onChange={handleChange}
+        placeholder="e.g. O+, B+"
+        required
+      />
+    </div>
+
+    <div className="form-group">
+      <label htmlFor="age">Age</label>
+      <input
+        type="number"
+        id="age"
+        name="age"
+        value={formData.age}
+        onChange={handleChange}
+        min={1}
+        max={120}
+        required
+      />
+    </div>
+
+    <div className="form-group">
+      <label htmlFor="identityProof">Identity Proof (Image)</label>
+      <input
+        type="file"
+        id="identityProof"
+        name="identityProof"
+        accept="image/*"
+        onChange={handleFileChange}
+        required
+      />
+    </div>
+
+    <div className="form-group">
+      <label htmlFor="candidatePhoto">Candidate Photo</label>
+      <input
+        type="file"
+        id="candidatePhoto"
+        name="candidatePhoto"
+        accept="image/*"
+        onChange={handleFileChange}
+        required
+      />
+    </div>
+
+    {selectedCompetition?.type === 'paid' && (
+      <p className="razorpay-note">
+        You will pay securely with Razorpay (test mode) after submitting this form.
+      </p>
+    )}
+
+    <button type="submit" className="submit-btn" disabled={submitting}>
+      {submitting ? 'Please wait...' : feeLabel}
+    </button>
+  </form>
+      </div >
+    </div >
   );
 }
 
