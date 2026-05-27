@@ -1,92 +1,127 @@
-const API_BASE = "https://aiproject-hee3.onrender.com/api";
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  "https://aiproject-hee3.onrender.com/api";
 
-// FETCH ALL REGISTRATIONS
 export async function fetchAllRegistrations() {
-  const response = await fetch(`${API_BASE}/registrations/`);
+
+  const response = await fetch(
+    `${API_BASE}/registrations/`
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch registrations");
   }
 
-  return await response.json();
+  return response.json();
 }
 
-// FETCH COMPETITIONS
 export async function fetchCompetitions() {
-  const response = await fetch(`${API_BASE}/competitions/`);
+
+  const response = await fetch(
+    `${API_BASE}/competitions/`
+  );
 
   if (!response.ok) {
     throw new Error("Failed to fetch competitions");
   }
 
-  return await response.json();
+  return response.json();
 }
 
-// CREATE REGISTRATION
-export async function createRegistration(data) {
-  const response = await fetch(`${API_BASE}/registrations/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
+export async function createRegistration(formData) {
+
+  const response = await fetch(
+    `${API_BASE}/register/`,
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
+
+  const data = await response.json();
 
   if (!response.ok) {
-    throw new Error("Failed to create registration");
+    throw new Error(
+      data.error || "Failed to create registration"
+    );
   }
 
-  return await response.json();
+  return data;
 }
 
-// CREATE RAZORPAY ORDER
-export async function createRazorpayOrder(data) {
-  const response = await fetch(`${API_BASE}/create-order/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
+export async function createRazorpayOrder(
+  registrationId,
+  amount
+) {
+
+  const response = await fetch(
+    `${API_BASE}/payment/create-order/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        registration_id: registrationId,
+        amount,
+      }),
+    }
+  );
+
+  const data = await response.json();
 
   if (!response.ok) {
-    throw new Error("Failed to create Razorpay order");
+    throw new Error(
+      data.error || "Failed to create order"
+    );
   }
 
-  return await response.json();
+  return data;
 }
 
-// VERIFY PAYMENT
-export async function verifyRazorpayPayment(data) {
-  const response = await fetch(`${API_BASE}/verify-payment/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
+export async function verifyRazorpayPayment(
+  payload
+) {
+
+  const response = await fetch(
+    `${API_BASE}/payment/verify/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  const data = await response.json();
 
   if (!response.ok) {
-    throw new Error("Payment verification failed");
+    throw new Error(
+      data.error || "Payment verification failed"
+    );
   }
 
-  return await response.json();
+  return data;
 }
 
-// LOAD RAZORPAY SCRIPT
 export function loadRazorpayScript() {
+
   return new Promise((resolve) => {
+
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
     const script = document.createElement("script");
 
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.src =
+      "https://checkout.razorpay.com/v1/checkout.js";
 
-    script.onload = () => {
-      resolve(true);
-    };
+    script.onload = () => resolve(true);
 
-    script.onerror = () => {
-      resolve(false);
-    };
+    script.onerror = () => resolve(false);
 
     document.body.appendChild(script);
   });
