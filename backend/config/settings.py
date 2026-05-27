@@ -5,12 +5,14 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('swg%mpeto1#bl#$j(8qrjotdi)-*@*u$^*6jdozm4xr^wn7)41')
+SECRET_KEY = os.environ.get("SECRET_KEY","swg%mpeto1#bl#$j(8qrjotdi)-*@*u$^*6jdozm4xr^wn7)41")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['https://aiproject-hee3.onrender.com']
+ALLOWED_HOSTS = ["aiproject-hee3.onrender.com",
+                   ".onrender.com",
+                   ]
 
 # Application definition
 INSTALLED_APPS = [
@@ -71,10 +73,10 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': 'vUoEsIvGqmkzcDjCGEmlMsWzseVDPzcD',
         'HOST': 'kodama.proxy.rlwy.net',
-        'PORT': '3306',
+        'PORT': '41539',
         'OPTIONS': {
-            'connect_timeout': 120,
-    },
+            'connect_timeout': 60,
+        },
     }
 }
 

@@ -1,28 +1,23 @@
 import razorpay
 from django.conf import settings
 
-from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 
 from .models import Registration, Payment
 
 
 # =========================
-# Razorpay Client
+# RAZORPAY CLIENT (FIXED)
 # =========================
 
-client = None
-
-try:
-    client = razorpay.Client(
-        auth=(
-            settings.RAZORPAY_KEY_ID,
-            settings.RAZORPAY_KEY_SECRET
-        )
+client = razorpay.Client(
+    auth=(
+        settings.RAZORPAY_KEY_ID,
+        settings.RAZORPAY_KEY_SECRET
     )
-except Exception:
-    client = None
+)
 
 
 # =========================
@@ -31,7 +26,6 @@ except Exception:
 
 @api_view(['POST'])
 def register_participant(request):
-
     try:
         data = request.data
         files = request.FILES
@@ -39,7 +33,7 @@ def register_participant(request):
         full_name = data.get('name', '').strip()
         name_parts = full_name.split(' ', 1)
 
-        first_name = name_parts[0]
+        first_name = name_parts[0] if len(name_parts) > 0 else ''
         last_name = name_parts[1] if len(name_parts) > 1 else ''
 
         registration = Registration.objects.create(
@@ -70,37 +64,45 @@ def register_participant(request):
 
 @api_view(['GET'])
 def get_registrations(request):
+    try:
+        registrations = Registration.objects.all()[:50]
 
-    registrations = Registration.objects.all()[:50]
+        data = []
+        for reg in registrations:
+            data.append({
+                'registration_id': reg.registration_id,
+                'first_name': reg.first_name,
+                'last_name': reg.last_name,
+                'email': reg.email,
+                'competition_name': reg.competition_name,
+            })
 
-    data = []
+        return Response(data)
 
-    for reg in registrations:
-        data.append({
-            'registration_id': reg.registration_id,
-            'first_name': reg.first_name,
-            'last_name': reg.last_name,
-            'email': reg.email,
-            'competition_name': reg.competition_name,
-        })
-
-    return Response(data)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
 
 # =========================
-# CREATE ORDER (RAZORPAY)
+# GET COMPETITIONS
+# =========================
+
+@api_view(['GET'])
+def get_competitions(request):
+    return Response([
+        {"id": 1, "title": "Cooking Competition"},
+        {"id": 2, "title": "Dance Competition"},
+        {"id": 3, "title": "Singing Competition"},
+    ])
+
+
+# =========================
+# CREATE RAZORPAY ORDER
 # =========================
 
 @api_view(['POST'])
 def create_order(request):
-
     try:
-        if client is None:
-            return Response(
-                {'error': 'Razorpay not configured'},
-                status=500
-            )
-
         data = request.data
         amount = data.get('amount')
         registration_id = data.get('registration_id')
@@ -129,16 +131,12 @@ def create_order(request):
 
 
 # =========================
-# VERIFY PAYMENT
+# VERIFY PAYMENT (FINAL FIXED)
 # =========================
 
 @api_view(['POST'])
 def verify_payment(request):
-
     try:
-        if client is None:
-            return Response({'error': 'Razorpay not configured'}, status=500)
-
         data = request.data
 
         razorpay_order_id = data.get('razorpay_order_id')
@@ -147,6 +145,7 @@ def verify_payment(request):
         registration_id = data.get('registration_id')
         amount = data.get('amount', 0)
 
+        # VERIFY SIGNATURE
         client.utility.verify_payment_signature({
             'razorpay_order_id': razorpay_order_id,
             'razorpay_payment_id': razorpay_payment_id,
@@ -160,6 +159,7 @@ def verify_payment(request):
         if not registration:
             return Response({'error': 'Registration not found'}, status=404)
 
+        # CREATE OR UPDATE PAYMENT
         payment, created = Payment.objects.get_or_create(
             registration=registration,
             defaults={
@@ -186,17 +186,3 @@ def verify_payment(request):
 
     except Exception as e:
         return Response({'error': str(e)}, status=500)
-
-
-# =========================
-# GET COMPETITIONS
-# =========================
-
-@api_view(['GET'])
-def get_competitions(request):
-
-    return Response([
-        {"id": 1, "title": "Cooking Competition"},
-        {"id": 2, "title": "Dance Competition"},
-        {"id": 3, "title": "Singing Competition"},
-    ])
