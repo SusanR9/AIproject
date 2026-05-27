@@ -11,9 +11,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY","swg%mpeto1#bl#$j(8qrjotdi)-*@*u$^*6jdo
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["aiproject-hee3.onrender.com",
-                   ".onrender.com",
-                   ]
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
@@ -71,21 +69,17 @@ pymysql.version_info = (2, 2, 1, 'final', 0)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'railway',
-        'USER': 'root',
-        'PASSWORD': os.environ.get("vUoEsIvGqmkzcDjCGEmlMsWzseVDPzcD"),
-        'HOST': 'kodama.proxy.rlwy.net',
-        'PORT': '41539',
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'connect_timeout': 300,
-            'init_command': "SET SESSION wait_timeout=28800",
-        },
+        'NAME': os.getenv('MYSQL_DATABASE'),
+        'USER': os.getenv('MYSQL_USER'),
+        'PASSWORD': os.getenv('MYSQL_PASSWORD'),
+        'HOST': os.getenv('MYSQL_HOST'),
+        'PORT': os.getenv('MYSQL_PORT'),
         'CONN_MAX_AGE': 60,
+        'OPTIONS': {
+            'connect_timeout': 60,
+        }
     }
 }
-
-
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
