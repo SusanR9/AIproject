@@ -455,3 +455,124 @@ body {
     height: auto;
   }
 }
+
+/* =====================================
+   GLOBAL LAYOUT FIX
+===================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Prevent floating */
+section,
+div {
+  max-width: 100%;
+}
+
+/* MAIN PAGE */
+.home-page,
+.hero-section,
+.main-container {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* =====================================
+   FIXED NAVBAR
+===================================== */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 999;
+  background: rgba(10, 10, 20, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 14px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Prevent content hiding behind navbar */
+body {
+  padding-top: 80px;
+}
+
+/* NAV LINKS */
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* =====================================
+   MOBILE NAVBAR
+===================================== */
+
+@media screen and (max-width: 768px) {
+
+  .navbar {
+    flex-direction: column;
+    padding: 14px 18px;
+    gap: 12px;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .hero-title {
+    font-size: 2rem !important;
+    text-align: center;
+  }
+
+  .hero-subtitle {
+    text-align: center;
+    font-size: 1rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero-buttons button {
+    width: 100%;
+  }
+
+  .competition-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .competition-card {
+    width: 100%;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 24px 16px;
+  }
+}

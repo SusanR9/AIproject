@@ -6,7 +6,8 @@ function Footer() {
       <div className="footer-container">
         <div className="footer-section">
           <h3>Competition Hub</h3>
-          <p>Join thousands of developers in exciting coding competitions and hackathons worldwide.</p>
+          <p> Discover talent, compete with passion, and showcase your skills
+            through exciting competitions across multiple categories.</p>
         </div>
         <div className="footer-section">
           <h4>Quick Links</h4>

@@ -1,18 +1,14 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import logo from '../assets/complogo.jpg';
+import { Link } from "react-router-dom";
+
 function Navbar() {
   return (
     <nav className="navbar">
-      <div className="nav-container">
-        <Link to="/" className="nav-logo">
-          <img src={logo} alt="Competition Hub" className="logo-img" />
-          <span>Competition Hub</span>
-        </Link>
-        <div className="nav-menu">
-          <Link to="/" className="nav-link">Home</Link>
-          <Link to="/registration" className="nav-link">Register</Link>
-        </div>
+      <h2 className="logo">Competition Hub</h2>
+
+      <div className="nav-links">
+        <Link to="/">Home</Link>
+        <Link to="/registration">Register</Link>
+        <Link to="/admin">Admin</Link>
       </div>
     </nav>
   );
