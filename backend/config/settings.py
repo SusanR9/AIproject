@@ -1,19 +1,23 @@
 import os
 from pathlib import Path
 import pymysql
+
 pymysql.install_as_MySQLdb()
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
+# Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY","swg%mpeto1#bl#$j(8qrjotdi)-*@*u$^*6jdozm4xr^wn7)41")
+# Security
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-fallback-key"
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = ['*']
 
-# Application definition
+# Installed apps
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -24,12 +28,18 @@ INSTALLED_APPS = [
 
     'corsheaders',
     'rest_framework',
+
     'api',
 ]
+
+# Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+
     'whitenoise.middleware.WhiteNoiseMiddleware',
+
     'corsheaders.middleware.CorsMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -37,10 +47,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# CORS
 CORS_ALLOW_ALL_ORIGINS = True
 
+# URLs
 ROOT_URLCONF = 'config.urls'
 
+# Templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -57,29 +71,25 @@ TEMPLATES = [
     },
 ]
 
+# WSGI
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
-import pymysql
-pymysql.install_as_MySQLdb()
-pymysql.__version__ = '2.2.1'
-pymysql.version_info = (2, 2, 1, 'final', 0)
-
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('MYSQL_DATABASE'),
-        'USER': os.getenv('MYSQL_USER'),
-        'PASSWORD': os.getenv('MYSQL_PASSWORD'),
-        'HOST': os.getenv('MYSQL_HOST'),
-        'PORT': os.getenv('MYSQL_PORT'),
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': os.environ.get('DB_PORT'),
         'CONN_MAX_AGE': 60,
         'OPTIONS': {
             'connect_timeout': 60,
         }
     }
 }
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -98,22 +108,33 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'UTC'
+
 USE_I18N = True
+
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
+# Static files
+STATIC_URL = '/static/'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Media files
 MEDIA_URL = '/media/'
+
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Default primary key field type
+# Default primary key
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Razorpay settings
-RAZORPAY_KEY_ID = "rzp_test_SlyeZSQVRS6kuk"
-RAZORPAY_KEY_SECRET = "Qt1G3eLwSAFA8l5bHEHm69ct"
+# Razorpay
+RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
+
+RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
 
 print("Render deployment running")
+print("DB_HOST:", os.environ.get("DB_HOST"))
+print("DB_NAME:", os.environ.get("DB_NAME"))
